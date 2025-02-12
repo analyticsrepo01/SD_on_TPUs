@@ -43,3 +43,53 @@ Ensure you have the following:
 ## Getting Started
 
 Refer to the individual notebook files for detailed instructions on how to deploy and use the Stable Diffusion XL models.
+
+## Update the container for own model:
+
+All the steps needed to update a container :
+
+1.  Pull (Do update the container):
+    ```
+    docker pull us-west1-docker.pkg.dev/my-project-0004-346516/diffusion-jax-model/my-custom-diffusers:v1.0
+    ```
+2.  Run (Update the container name):
+    ```
+    docker run -it --name temp-config-container us-west1-docker.pkg.dev/my-project-0004-346516/diffusion-jax-model/my-custom-diffusers:v1.0 /bin/bash
+    ```
+3.  (Inside container): `nano download_model.py` (make your changes and save)
+
+    1.  Use the following python code and save it as `download_model.py`
+
+    ```python
+    from huggingface_hub import snapshot_download
+    import os
+    # --- CHOOSE YOUR MODEL HERE ---
+    # Replace this with the *actual* repo_id you want.
+    repo_id = "stabilityai/stable-diffusion-2-1"  # Example: SD 2.1
+    # repo_id = "your-org/your-model" #  <-- Use the correct one!
+
+    # --- Specify the cache directory (optional, but good practice) ---
+    cache_dir = "/root/.cache/huggingface/hub"
+
+    # --- Download the model snapshot ---
+    try:
+        snapshot_download(repo_id=repo_id, cache_dir=cache_dir, local_files_only=False)
+        print(f"Successfully downloaded {repo_id} to {cache_dir}")
+
+    except Exception as e:
+        print(f"Error downloading {repo_id}: {e}")
+    ```
+4.  (Inside container): `pip install --upgrade huggingface_hub`
+5.  (Inside container): `exit`
+6.  Commit:
+    ```
+    docker commit temp-config-container us-west1-docker.pkg.dev/my-project-0004-346516/diffusion-jax-model/my-custom-diffusers:v1.1
+    ```
+7.  Push:
+    ```
+    docker push us-west1-docker.pkg.dev/my-project-0004-346516/diffusion-jax-model/my-custom-diffusers:v1.1
+    ```
+8.  Remove temporary container:
+    ```
+    docker rm temp-config-container
+    ```
